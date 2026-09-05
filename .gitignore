@@ -33,3 +33,7 @@ data/
 # Docker image artifacts
 *.tar
 *.zip
+
+# Local migration artifacts (untracked)
+NavSphere-sites.json
+scripts/convert-navsphere.mjs
