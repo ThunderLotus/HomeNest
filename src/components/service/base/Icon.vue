@@ -1,6 +1,6 @@
 <template>
   <div :class="wrapClasses" :style="wrapStyles">
-    <i v-if="props?.css" :class="cssClasses" />
+    <i v-if="props?.css" :class="cssClasses" :style="cssStyles" />
     <Icon v-else-if="props?.name" :name="props.name" :class="iconClasses" :style="iconStyles" />
     <img v-else-if="props?.url" :src="props.url" alt="" :class="iconClasses" :style="imgStyles">
   </div>
@@ -21,16 +21,23 @@ const iconClasses = 'block h-full w-full'
 
 const cssClasses = computed(() => {
   if (typeof props?.css !== 'string') {
-    return iconClasses
+    return ''
   }
-  // `css` stores `fi fi-rr-home` (or a bare `fi-rr-home`); make sure the
-  // base `fi` class is present so the font-family rule applies.
   const classes = props.css.split(/\s+/).filter(Boolean)
   if (!classes.includes('fi')) {
     classes.unshift('fi')
   }
-  return [...classes, iconClasses].join(' ')
+  return classes.join(' ')
 })
+
+const cssStyles = computed(() => ({
+  'display': 'flex',
+  'align-items': 'center',
+  'justify-content': 'center',
+  'width': '100%',
+  'height': '100%',
+  'font-size': props?.size ? `${props.size}px` : '2.5rem',
+}))
 
 const wrapClasses = computed(() => ({
   'bg-fg/5 dark:bg-fg/10': props?.wrap && !props?.background,

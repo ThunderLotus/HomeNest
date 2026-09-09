@@ -2,7 +2,7 @@
   <div class="space-y-2">
     <div class="flex items-center gap-2">
       <div class="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg border border-fg/10 bg-fg/5 overflow-hidden">
-        <span v-if="cssValue" :class="previewCssClasses" />
+        <span v-if="cssValue" :class="previewCssClasses" style="font-size: 1.5rem" />
         <ServiceBaseIcon v-else-if="modelValue" :name="modelValue" :color="lucideColor" :stroke-width="lucideStrokeWidth" />
         <img v-else-if="urlValue" :src="urlValue" alt="" class="block h-full w-full">
         <span v-else class="text-xs text-fg-dimmed">–</span>
@@ -145,7 +145,7 @@
             :title="icon"
             @click="onPickFlaticon(icon)"
           >
-            <i :class="flaticonCss(icon)" />
+            <i :class="flaticonCss(icon)" class="text-xl" />
           </button>
         </div>
         <p v-else class="text-sm text-fg-dimmed px-1">
