@@ -9,6 +9,8 @@ export interface ServiceStatus {
 export interface ServiceIcon {
   url?: string
   name?: string
+  /** Flaticon UIcons CSS classes, e.g. `fi fi-rr-home` (font icon via CDN stylesheet). */
+  css?: string
   wrap?: boolean
   background?: string
   color?: string

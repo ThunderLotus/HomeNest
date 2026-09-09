@@ -37,3 +37,5 @@ data/
 # Local migration artifacts (untracked)
 NavSphere-sites.json
 scripts/convert-navsphere.mjs
+scripts/generate-flaticon-icons.cjs
+homepage/

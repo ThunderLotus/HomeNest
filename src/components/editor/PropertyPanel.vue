@@ -134,6 +134,7 @@
             <EditorIconPicker
               :model-value="selectedService.icon?.name || ''"
               :url-value="selectedService.icon?.url || ''"
+              :css-value="selectedService.icon?.css || ''"
               :placeholder="t('editor.field.iconName')"
               :input-class="inputClass"
               :icon-color="selectedService.icon?.color || ''"
@@ -142,6 +143,7 @@
               @update:model-value="onSelectIconName($event)"
               @select-url="onSelectIconUrl"
               @select-lucide="onSelectLucide"
+              @select-css="onSelectIconCss"
             />
             <div class="flex gap-2">
               <input
@@ -497,6 +499,7 @@ function onSelectIconName(name: string): void {
   deleteCachedIcon(svc.icon)
   setIcon(svc, 'name', name)
   setIcon(svc, 'url', '')
+  setIcon(svc, 'css', '')
 }
 
 function onSelectIconUrl(url: string): void {
@@ -507,6 +510,19 @@ function onSelectIconUrl(url: string): void {
   deleteCachedIcon(svc.icon)
   setIcon(svc, 'url', url)
   setIcon(svc, 'name', '')
+  setIcon(svc, 'css', '')
+}
+
+/** Flaticon UIcons pick — set css classes, clear name/url. */
+function onSelectIconCss(css: string): void {
+  const svc = selectedService.value
+  if (!svc) {
+    return
+  }
+  deleteCachedIcon(svc.icon)
+  setIcon(svc, 'css', css)
+  setIcon(svc, 'name', '')
+  setIcon(svc, 'url', '')
 }
 
 function onSelectLucide(data: { name: string, color: string, strokeWidth: number, size: number }): void {
@@ -517,6 +533,7 @@ function onSelectLucide(data: { name: string, color: string, strokeWidth: number
   deleteCachedIcon(svc.icon)
   setIcon(svc, 'name', data.name)
   setIcon(svc, 'url', '')
+  setIcon(svc, 'css', '')
   setIcon(svc, 'color', data.color)
   setIcon(svc, 'strokeWidth', data.strokeWidth)
   setIcon(svc, 'size', data.size)

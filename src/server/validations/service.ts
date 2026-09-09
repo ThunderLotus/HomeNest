@@ -9,6 +9,7 @@ export const statusSchema = z.object({
 export const iconSchema = z.object({
   url: z.string().optional(),
   name: z.string().optional(),
+  css: z.string().optional(),
   wrap: z.boolean().optional(),
   background: z.string().optional(),
   color: z.string().optional(),

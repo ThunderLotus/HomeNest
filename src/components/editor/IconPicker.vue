@@ -1,10 +1,9 @@
 <template>
   <div class="space-y-2">
     <div class="flex items-center gap-2">
-      <div
-        class="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg border border-fg/10 bg-fg/5 overflow-hidden"
-      >
-        <ServiceBaseIcon v-if="modelValue" :name="modelValue" :color="lucideColor" :stroke-width="lucideStrokeWidth" />
+      <div class="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg border border-fg/10 bg-fg/5 overflow-hidden">
+        <span v-if="cssValue" :class="previewCssClasses" />
+        <ServiceBaseIcon v-else-if="modelValue" :name="modelValue" :color="lucideColor" :stroke-width="lucideStrokeWidth" />
         <img v-else-if="urlValue" :src="urlValue" alt="" class="block h-full w-full">
         <span v-else class="text-xs text-fg-dimmed">–</span>
       </div>
@@ -49,6 +48,14 @@
           @click="switchMode('lucide')"
         >
           {{ t('editor.icon.tabLucide') }}
+        </button>
+        <button
+          type="button"
+          class="px-2 py-1 rounded-md text-xs border transition-colors"
+          :class="mode === 'flaticon' ? 'border-brand-500/40 bg-brand-500/10 text-brand-500' : 'border-fg/10 text-fg-dimmed hover:bg-fg/10'"
+          @click="switchMode('flaticon')"
+        >
+          {{ t('editor.icon.tabFlaticon') }}
         </button>
       </div>
 
@@ -112,6 +119,40 @@
         </div>
         <p class="text-xs text-fg-dimmed px-1">
           {{ t('editor.icon.homarrLicense') }}
+        </p>
+      </template>
+
+      <template v-else-if="mode === 'flaticon'">
+        <div class="flex gap-1 flex-wrap">
+          <button
+            v-for="family in FLATICON_FAMILIES"
+            :key="family.id"
+            type="button"
+            class="px-2 py-0.5 rounded-md text-xs border transition-colors"
+            :class="flaticonFamily === family.id ? 'border-brand-500/40 bg-brand-500/10 text-brand-500' : 'border-fg/10 text-fg-dimmed hover:bg-fg/10'"
+            @click="flaticonFamily = family.id"
+          >
+            {{ family.label }}
+          </button>
+        </div>
+        <div v-if="shownFlaticon.length" class="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto">
+          <button
+            v-for="icon in shownFlaticon"
+            :key="icon"
+            type="button"
+            class="aspect-square flex items-center justify-center rounded-lg hover:bg-fg/10 transition-colors text-fg"
+            :class="cssValue === flaticonCss(icon) ? 'ring-2 ring-brand-500' : ''"
+            :title="icon"
+            @click="onPickFlaticon(icon)"
+          >
+            <i :class="flaticonCss(icon)" />
+          </button>
+        </div>
+        <p v-else class="text-sm text-fg-dimmed px-1">
+          {{ t('editor.icon.noResults') }}
+        </p>
+        <p class="text-xs text-fg-dimmed px-1">
+          {{ t('editor.icon.flaticonLicense') }}
         </p>
       </template>
 
@@ -199,12 +240,15 @@
 </template>
 
 <script setup lang="ts">
+import { ensureFlaticonCss } from '~/composables/useFlaticon'
+import { FLATICON_FAMILIES, FLATICON_ICONS } from '~/utils/flaticonIcons'
 import { HOMARR_ICONS } from '~/utils/homarrIcons'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     modelValue?: string
     urlValue?: string
+    cssValue?: string
     placeholder?: string
     inputClass?: string
     iconColor?: string
@@ -214,6 +258,7 @@ withDefaults(
   {
     modelValue: '',
     urlValue: '',
+    cssValue: '',
     placeholder: '',
     inputClass: '',
     iconColor: '',
@@ -226,17 +271,55 @@ const emit = defineEmits<{
   'update:modelValue': [value: string]
   'selectUrl': [url: string]
   'selectLucide': [data: { name: string, color: string, strokeWidth: number, size: number }]
+  'selectCss': [css: string]
 }>()
 
 const { t } = useI18n()
 
 const openPicker = ref(false)
-const mode = ref<'iconify' | 'homarr' | 'lucide'>('iconify')
+const mode = ref<'iconify' | 'homarr' | 'lucide' | 'flaticon'>('iconify')
 const query = ref('')
 const icons = ref<string[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const searchInput = ref<HTMLInputElement | null>(null)
+
+const flaticonFamily = ref(FLATICON_FAMILIES[0]?.id ?? 'rr')
+
+watch([openPicker, flaticonFamily], ([open]) => {
+  if (open) {
+    ensureFlaticonCss(FLATICON_FAMILIES)
+  }
+})
+
+const flaticonFiltered = computed(() => {
+  const names = FLATICON_ICONS[flaticonFamily.value] ?? []
+  const q = query.value.trim().toLowerCase()
+  return q ? names.filter((n) => n.toLowerCase().includes(q)) : names
+})
+const flaticonLimit = ref(96)
+const shownFlaticon = computed(() => flaticonFiltered.value.slice(0, flaticonLimit.value))
+
+watch(flaticonFiltered, () => {
+  flaticonLimit.value = 96
+})
+
+function flaticonCss(icon: string): string {
+  const family = FLATICON_FAMILIES.find((f) => f.id === flaticonFamily.value)
+  return `fi ${family?.prefix ?? 'fi-rr-'}${icon}`
+}
+
+function onPickFlaticon(icon: string) {
+  emit('selectCss', flaticonCss(icon))
+}
+
+const previewCssClasses = computed(() => {
+  const classes = (props.cssValue ?? '').split(/\s+/).filter(Boolean)
+  if (!classes.includes('fi')) {
+    classes.unshift('fi')
+  }
+  return classes.join(' ')
+})
 
 const lucideSelected = ref('')
 const lucideColor = ref('')
@@ -403,7 +486,7 @@ let searchSeq = 0
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 
 watch(query, (value) => {
-  if (mode.value === 'homarr') {
+  if (mode.value === 'homarr' || mode.value === 'flaticon') {
     return
   }
   if (searchTimer) {
@@ -444,7 +527,7 @@ async function runSearch(q: string) {
   }
 }
 
-function switchMode(next: 'iconify' | 'homarr' | 'lucide') {
+function switchMode(next: 'iconify' | 'homarr' | 'lucide' | 'flaticon') {
   if (next === mode.value) {
     return
   }
